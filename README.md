@@ -26,6 +26,18 @@ pnpm test       # 单元测试（vitest）
 
 技术栈：Vue 3 + Vite + vue-router（hash 模式）+ Dexie（IndexedDB）+ JSZip + vite-plugin-pwa。
 
+### 受限环境跑测试
+
+如果 `pnpm test` 报 `Error: spawn EPERM`（Vite 启动时会执行一次 `net use`
+探测网络驱动器，子进程被沙箱或安全软件拒绝），改用：
+
+```bash
+pnpm test:restricted
+```
+
+它通过预加载 `scripts/vitest-sandbox-patch.cjs` 把这次探测替换成空实现，
+被测代码不变。正常环境请直接用 `pnpm test`。
+
 ## 目录
 
 ```
@@ -35,14 +47,17 @@ src/
     pregnancy.js     预产期算法、孕周计算、日期工具（纯函数，有单测）
     photo.js         图片压缩（长边 1600，JPEG 0.8）与存储容量检查
     backup.js        ZIP 导出/导入（导入前逐字段校验，事务原子写入）
+    backupValidate.js 备份 JSON 的逐字段校验（纯函数，有单测）
     stageDefaults.js 17 条预置产检项目
   views/             首页 / 产检 / 产检详情 / 花费 / 阶段 / 我的 / 建立孕期
   components/        TabBar、PinLock、Toast
   assets/style.css   全局样式（暖色主题）
 scripts/
   gen-icons.py       生成 PWA 图标（Pillow）
+  run-tests.mjs      受限环境下跑测试的包装脚本
 tests/
-  pregnancy.test.js  预产期与孕周算法单测
+  pregnancy.test.js      预产期、孕周与孕周快照单测
+  backupValidate.test.js 备份校验单测
 ```
 
 ## 图标
