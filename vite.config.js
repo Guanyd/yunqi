@@ -8,6 +8,10 @@ const BASE = '/yunqi/'
 
 export default defineConfig({
   base: BASE,
+  // 默认缓存目录是 node_modules/.vite，某些受限环境（沙箱、只读依赖目录）
+  // 无法在其中创建临时目录，会导致依赖预构建失败、页面 504。
+  // 改到项目根下，构建产物与依赖目录都不受影响。
+  cacheDir: '.vite-cache',
   plugins: [
     vue(),
     VitePWA({

@@ -26,3 +26,4 @@ dist-ssr
 # Local temp
 .tmp-serve/
 .tmp-*
+.vite-cache/
