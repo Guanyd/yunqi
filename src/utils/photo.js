@@ -42,3 +42,17 @@ export async function checkStorage(neededBytes = 5 * 1024 * 1024) {
 export function blobToUrl(blob) {
   return URL.createObjectURL(blob)
 }
+
+/**
+ * 批量释放 object URL。
+ * 每次刷新检查单列表都会重新建一批 URL，不释放会让照片越翻内存越涨，
+ * iOS 上尤其容易被系统直接杀掉页面。
+ */
+export function revokeUrls(urls) {
+  if (!urls) return
+  const list = Array.isArray(urls) ? urls : Object.values(urls).flat()
+  for (const item of list) {
+    const url = typeof item === 'string' ? item : item?.url
+    if (url) URL.revokeObjectURL(url)
+  }
+}

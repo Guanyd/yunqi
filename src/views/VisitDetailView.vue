@@ -1,9 +1,9 @@
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { db, getPregnancy } from '../utils/db.js'
 import { recordGALabel } from '../utils/pregnancy.js'
-import { compressPhoto, checkStorage, blobToUrl } from '../utils/photo.js'
+import { compressPhoto, checkStorage, blobToUrl, revokeUrls } from '../utils/photo.js'
 
 const route = useRoute()
 const router = useRouter()
@@ -36,12 +36,20 @@ onMounted(async () => {
 })
 
 async function loadExams() {
+  // 重建列表前先释放上一批 URL，避免反复刷新导致内存持续增长
+  revokeUrls(photoUrls.value)
+  photoUrls.value = {}
   exams.value = await db.exams.where('visitId').equals(visitId).toArray()
   for (const ex of exams.value) {
     const photos = await db.photos.where('examId').equals(ex.id).toArray()
     photoUrls.value[ex.id] = photos.map(p => ({ id: p.id, url: blobToUrl(p.blob) }))
   }
 }
+
+onUnmounted(() => {
+  revokeUrls(photoUrls.value)
+  photoUrls.value = {}
+})
 
 async function loadExpenses() {
   expenses.value = await db.expenses.where('visitId').equals(visitId).toArray()
@@ -85,19 +93,24 @@ async function addPhotos(examId, event) {
   if (!ok) { window.__showToast?.('存储空间不足，请先导出备份再清理'); return }
   uploading.value = true
   uploadProgress.value = 0
+  let fallbackCount = 0
   for (let i = 0; i < files.length; i++) {
     try {
       const blob = await compressPhoto(files[i])
       await db.photos.add({ examId, blob, createdAt: new Date().toISOString() })
     } catch (e) {
-      // fallback: store original
+      // 压缩失败（如浏览器不支持 HEIC 解码）时回退存原图，并明确提示体积较大
       await db.photos.add({ examId, blob: files[i], createdAt: new Date().toISOString() })
+      fallbackCount++
     }
     uploadProgress.value = Math.round(((i + 1) / files.length) * 100)
   }
   uploading.value = false
   event.target.value = ''
   await loadExams()
+  if (fallbackCount > 0) {
+    window.__showToast?.(`${fallbackCount} 张照片未能压缩，已按原图保存，占用空间较大`)
+  }
 }
 
 async function removePhoto(photoId, examId) {
