@@ -2,7 +2,7 @@
 import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { db, getPregnancy } from '../utils/db.js'
-import { gestationalAge, formatGA } from '../utils/pregnancy.js'
+import { recordGALabel } from '../utils/pregnancy.js'
 import { compressPhoto, checkStorage, blobToUrl } from '../utils/photo.js'
 
 const route = useRoute()
@@ -30,7 +30,7 @@ onMounted(async () => {
   visit.value = await db.visits.get(visitId)
   if (!visit.value) { router.replace('/visits'); return }
   const preg = await getPregnancy()
-  if (preg) gaLabel.value = formatGA(gestationalAge(preg.lmp, visit.value.date))
+  gaLabel.value = recordGALabel(visit.value, preg?.lmp)
   await loadExams()
   await loadExpenses()
 })
@@ -137,6 +137,7 @@ const totalExp = () => expenses.value.reduce((s, e) => s + e.amount, 0)
 
     <div class="card">
       <p v-if="visit.hospital"><strong>医院：</strong>{{ visit.hospital }}</p>
+      <p v-if="visit.department"><strong>科室：</strong>{{ visit.department }}</p>
       <p v-if="visit.doctor"><strong>医生：</strong>{{ visit.doctor }}</p>
       <p v-if="visit.purpose"><strong>目的：</strong>{{ visit.purpose }}</p>
       <p v-if="visit.doctorNotes" class="mt-8"><strong>医嘱：</strong>{{ visit.doctorNotes }}</p>

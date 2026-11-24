@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest'
 import {
   parseDate, formatDate, addDays, daysBetween,
   dueDateFromLMP, dueDateFromCurrentGA, lmpFromDueDate,
-  gestationalAge, formatGA, trimesterLabel,
+  gestationalAge, formatGA, trimesterLabel, gaSnapshot, recordGALabel,
   isValidLMP, isValidDueDate
 } from '../src/utils/pregnancy.js'
 
@@ -59,6 +59,23 @@ describe('gestational age', () => {
     expect(trimesterLabel('early')).toBe('孕早期')
     expect(trimesterLabel('middle')).toBe('孕中期')
     expect(trimesterLabel('late')).toBe('孕晚期')
+  })
+})
+
+describe('孕周快照', () => {
+  it('gaSnapshot 记录当天的孕周', () => {
+    expect(gaSnapshot('2026-08-29', '2026-11-24')).toEqual({ gaWeeks: 12, gaDays: 3 })
+  })
+  it('recordGALabel 优先用记录里保存的孕周，不受之后改预产期影响', () => {
+    const rec = { date: '2026-11-24', gaWeeks: 12, gaDays: 3 }
+    // LMP 后来被改成别的日期，标签仍显示保存时的 12周+3天
+    expect(recordGALabel(rec, '2026-09-10')).toBe('12周+3天')
+  })
+  it('recordGALabel 对没有快照的旧记录退回现算', () => {
+    expect(recordGALabel({ date: '2026-11-24' }, '2026-08-29')).toBe('12周+3天')
+  })
+  it('recordGALabel 无记录时返回空字符串', () => {
+    expect(recordGALabel(null, '2026-08-29')).toBe('')
   })
 })
 

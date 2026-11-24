@@ -2,7 +2,7 @@
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { db, getPregnancy } from '../utils/db.js'
-import { gestationalAge, formatGA } from '../utils/pregnancy.js'
+import { gaSnapshot, recordGALabel } from '../utils/pregnancy.js'
 
 const router = useRouter()
 const visits = ref([])
@@ -19,7 +19,7 @@ onMounted(async () => {
 async function load() {
   visits.value = (await db.visits.orderBy('date').reverse().toArray()).map(v => ({
     ...v,
-    gaLabel: pregnancy.value ? formatGA(gestationalAge(pregnancy.value.lmp, v.date)) : ''
+    gaLabel: recordGALabel(v, pregnancy.value?.lmp)
   }))
 }
 
@@ -38,6 +38,10 @@ function openEdit(v) {
 async function save() {
   if (!form.value.date) return
   const data = { ...form.value, updatedAt: new Date().toISOString() }
+  // 保存当天的孕周快照：以后改预产期不会把这条记录的孕周改掉（PRD 5.2）
+  if (pregnancy.value?.lmp) {
+    Object.assign(data, gaSnapshot(pregnancy.value.lmp, data.date))
+  }
   if (editingId.value) {
     await db.visits.update(editingId.value, data)
   } else {

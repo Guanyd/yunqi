@@ -86,6 +86,28 @@ export function trimesterLabel(t) {
   return { early: '孕早期', middle: '孕中期', late: '孕晚期' }[t] || t
 }
 
+/**
+ * 产检记录保存当天的孕周快照。
+ * PRD 5.2：改预产期不能把旧记录的孕周重算乱，所以每次保存时把孕周存进记录。
+ */
+export function gaSnapshot(lmpDate, recordDate) {
+  const ga = gestationalAge(lmpDate, recordDate)
+  return { gaWeeks: ga.weeks, gaDays: ga.days }
+}
+
+/**
+ * 读取一条记录上的孕周快照并格式化。
+ * 早期版本存下的记录没有快照字段，退回用当前 LMP 现算，避免显示空白。
+ */
+export function recordGALabel(record, lmpDate) {
+  if (!record) return ''
+  if (Number.isFinite(record.gaWeeks) && Number.isFinite(record.gaDays)) {
+    return formatGA({ weeks: record.gaWeeks, days: record.gaDays })
+  }
+  if (!lmpDate || !record.date) return ''
+  return formatGA(gestationalAge(lmpDate, record.date))
+}
+
 // ---- 校验 ----
 
 /** 检查 LMP 是否在合理范围：今天-300 ~ 今天 */

@@ -2,7 +2,7 @@
 import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { db, getPregnancy, getSetting } from '../utils/db.js'
-import { gestationalAge, formatGA, trimesterLabel, today, daysBetween } from '../utils/pregnancy.js'
+import { gestationalAge, formatGA, trimesterLabel, today, daysBetween, recordGALabel } from '../utils/pregnancy.js'
 
 const router = useRouter()
 const pregnancy = ref(null)
@@ -21,10 +21,10 @@ const showBackupReminder = computed(() => {
   return daysSince > 7 || visitCountSinceBackup.value >= 3
 })
 
-/** 最近一次产检的孕周标注 */
+/** 最近一次产检的孕周标注（优先用记录里保存的当日孕周） */
 const lastVisitGA = computed(() => {
   if (!lastVisit.value || !pregnancy.value) return ''
-  return formatGA(gestationalAge(pregnancy.value.lmp, lastVisit.value.date))
+  return recordGALabel(lastVisit.value, pregnancy.value.lmp)
 })
 
 /** 距上次产检过了多少天 */
