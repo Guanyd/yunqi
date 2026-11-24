@@ -55,6 +55,8 @@ src/
 scripts/
   gen-icons.py       生成 PWA 图标（Pillow）
   run-tests.mjs      受限环境下跑测试的包装脚本
+  deploy-gh-pages.sh 一键构建并部署到 GitHub Pages
+  push-proxy.mjs     git TLS 不可用时的本地推送代理
 tests/
   pregnancy.test.js      预产期、孕周与孕周快照单测
   backupValidate.test.js 备份校验单测
@@ -80,6 +82,33 @@ python scripts/gen-icons.py
 
 ## 部署
 
-纯静态站点，`pnpm build` 后把 `dist/` 部署到任意静态托管即可
-（Cloudflare Pages / Vercel / GitHub Pages / 自建 Nginx）。
-注意 PWA 与 service worker 需要 HTTPS（`localhost` 除外）。
+线上地址：<https://guanyd.github.io/yunqi/>
+
+纯静态站点，构建产物在 `dist/`。仓库同时提供一键部署脚本：
+
+```bash
+GH_TOKEN=ghp_xxx bash scripts/deploy-gh-pages.sh
+```
+
+它依次执行 `vite build`、把 `dist/` 打成独立的 gh-pages 提交、推送到远端
+`gh-pages` 分支，GitHub Pages 会自动发布。
+
+部署到子路径（本项目是 `/yunqi/`）时，`vite.config.js` 的 `base` 与 manifest 的
+`start_url` / `scope` 必须一起改；图标路径用相对路径，随 base 一起走。
+
+> 注意：IndexedDB 按 origin 隔离。网址一旦定下来就不能再改，
+> 否则手机上已有的数据会读不到（只能靠导出 ZIP 迁移）。
+
+若本机 git 的 TLS 后端不可用（Windows 上表现为
+`schannel: AcquireCredentialsHandle failed: SEC_E_NO_CREDENTIALS`），
+先跑 `GH_TOKEN=... node scripts/push-proxy.mjs` 起本地转发代理，
+再 `GIT_PUSH_URL=http://127.0.0.1:5299/ bash scripts/deploy-gh-pages.sh`。
+
+PWA 与 service worker 需要 HTTPS（`localhost` 除外）。
+
+## 安装到 iPhone
+
+1. Safari 打开 <https://guanyd.github.io/yunqi/>
+2. 点分享按钮 → 「添加到主屏幕」
+3. 之后从主屏幕图标启动，即为全屏、可离线使用的独立应用
+
