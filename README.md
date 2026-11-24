@@ -38,6 +38,13 @@ pnpm test:restricted
 它通过预加载 `scripts/vitest-sandbox-patch.cjs` 把这次探测替换成空实现，
 被测代码不变。正常环境请直接用 `pnpm test`。
 
+### 局域网调试与安全上下文
+
+用 `--host 0.0.0.0` 起 dev server 后，手机可以通过 `http://<内网IP>:5199/yunqi/`
+访问，但**这是非安全上下文**：`crypto.subtle`、Service Worker、PWA 安装都不可用。
+PIN 校验因此内置了纯 JS 的 SHA-256 回退（`src/utils/crypto.js`），
+保证锁屏在局域网 http 下也能用；真机安装 PWA 仍需走线上 https 地址。
+
 ## 目录
 
 ```
@@ -48,6 +55,7 @@ src/
     photo.js         图片压缩（长边 1600，JPEG 0.8）与存储容量检查
     backup.js        ZIP 导出/导入（导入前逐字段校验，事务原子写入）
     backupValidate.js 备份 JSON 的逐字段校验（纯函数，有单测）
+    crypto.js        SHA-256（原生 crypto.subtle + 纯 JS 回退，有单测）
     stageDefaults.js 17 条预置产检项目
   views/             首页 / 产检 / 产检详情 / 花费 / 阶段 / 我的 / 建立孕期
   components/        TabBar、PinLock、Toast、BootSplash
@@ -61,6 +69,7 @@ scripts/
 tests/
   pregnancy.test.js      预产期、孕周与孕周快照单测
   backupValidate.test.js 备份校验单测
+  crypto.test.js         SHA-256 回退实现单测
 ```
 
 ## 图标与开屏
