@@ -4,6 +4,7 @@ import { useRouter } from 'vue-router'
 import { db, getPregnancy, savePregnancy, getSetting, setSetting } from '../utils/db.js'
 import { exportBackup, importBackup, downloadBlob } from '../utils/backup.js'
 import { dueDateFromLMP, lmpFromDueDate, isValidLMP, isValidDueDate, today } from '../utils/pregnancy.js'
+import { sha256Hex } from '../utils/crypto.js'
 
 const router = useRouter()
 const pregnancy = ref(null)
@@ -58,8 +59,7 @@ async function doImport(event) {
 
 // ---- PIN ----
 async function sha256(str) {
-  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str))
-  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('')
+  return sha256Hex(str)
 }
 
 function openPinSetup() {

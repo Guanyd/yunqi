@@ -1,6 +1,7 @@
 <script setup>
 import { ref } from 'vue'
-import { getSetting, setSetting } from '../utils/db.js'
+import { getSetting } from '../utils/db.js'
+import { sha256Hex } from '../utils/crypto.js'
 
 const emit = defineEmits(['unlocked'])
 const pin = ref('')
@@ -17,14 +18,19 @@ function startTick() {
 startTick()
 
 async function sha256(str) {
-  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str))
-  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('')
+  return sha256Hex(str)
 }
 
 async function submit() {
   if (Date.now() < lockUntil.value) return
   if (pin.value.length !== 4) { error.value = '请输入4位数字'; return }
-  const hash = await sha256(pin.value)
+  let hash
+  try {
+    hash = await sha256(pin.value)
+  } catch {
+    error.value = '校验失败，请刷新页面重试'
+    return
+  }
   const stored = await getSetting('pinHash')
   if (hash === stored) {
     clearInterval(timer)

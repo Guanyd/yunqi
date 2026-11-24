@@ -37,6 +37,9 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,svg,png,woff2}'],
+        // 开屏图只在 iOS「添加到主屏幕」时由系统抓取一次，运行时不请求，
+        // 排除掉可让首次加载少下载约 200 KB。
+        globIgnores: ['**/apple-splash-*.png'],
         runtimeCaching: []
       }
     })

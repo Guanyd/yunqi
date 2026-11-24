@@ -50,10 +50,11 @@ src/
     backupValidate.js 备份 JSON 的逐字段校验（纯函数，有单测）
     stageDefaults.js 17 条预置产检项目
   views/             首页 / 产检 / 产检详情 / 花费 / 阶段 / 我的 / 建立孕期
-  components/        TabBar、PinLock、Toast
+  components/        TabBar、PinLock、Toast、BootSplash
   assets/style.css   全局样式（暖色主题）
 scripts/
   gen-icons.py       生成 PWA 图标（Pillow）
+  gen-splash.py      生成 iOS 开屏图（Pillow）
   run-tests.mjs      受限环境下跑测试的包装脚本
   deploy-gh-pages.sh 一键构建并部署到 GitHub Pages
   push-proxy.mjs     git TLS 不可用时的本地推送代理
@@ -62,9 +63,9 @@ tests/
   backupValidate.test.js 备份校验单测
 ```
 
-## 图标
+## 图标与开屏
 
-图标由 `scripts/gen-icons.py` 生成，改色或改形状后重新运行即可：
+应用图标由 `scripts/gen-icons.py` 生成，改色或改形状后重新运行即可：
 
 ```bash
 python scripts/gen-icons.py
@@ -72,6 +73,18 @@ python scripts/gen-icons.py
 
 会输出 `public/icon-192.png`、`public/icon-512.png`、`public/apple-touch-icon.png`
 以及两个 `maskable` 版本（内容收进 80% 安全区）。
+
+iOS 的开屏图不读 manifest，只能按机型逐条声明，由 `scripts/gen-splash.py`
+生成到 `public/apple-splash-<宽>x<高>.png`，再在 `index.html` 里用
+`<link rel="apple-touch-startup-image" media="...">` 逐条引用：
+
+```bash
+python scripts/gen-splash.py
+```
+
+新增机型时同时改 `scripts/gen-splash.py` 的 `DEVICES` 和 `index.html` 的
+`media` 查询。开屏图不进 Service Worker 预缓存（只在装到主屏幕时被系统取用），
+避免首次加载多下载约 200 KB。
 
 ## 数据与隐私
 
