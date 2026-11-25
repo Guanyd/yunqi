@@ -42,20 +42,43 @@ async function submit() {
 </script>
 
 <template>
-  <div class="page">
-    <h1 style="margin-bottom:8px">建立孕期档案</h1>
-    <p class="text-muted text-sm mb-12">选择一种方式计算预产期，之后可以改成医院给的日期。</p>
+  <div class="page setup-page">
+    <header class="setup-intro">
+      <p class="eyebrow is-center">WELCOME</p>
 
-    <div class="card">
+      <div class="intro-art" aria-hidden="true">
+        <span class="art-ring"></span>
+        <span class="art-ring art-ring--inner"></span>
+        <span class="art-dot art-dot--a"></span>
+        <span class="art-dot art-dot--b"></span>
+        <svg class="art-glyph" viewBox="0 0 48 48" focusable="false">
+          <path d="M24 38 V21" />
+          <path d="M24 30 C24 23 17 18 11 19 C11 27 17 31 24 30 Z" />
+          <path d="M24 25 C24 18 31 13 37 14 C37 22 31 26 24 25 Z" />
+          <path d="M15 38 Q24 43 33 38" />
+        </svg>
+      </div>
+
+      <h1 class="page-title">建立孕期档案</h1>
+      <p class="page-sub">
+        选择一种方式计算预产期，之后可以改成医院给的日期。<br />
+        从此刻起，一起温柔地记录这段旅程。
+      </p>
+    </header>
+
+    <div class="card setup-card">
+      <p class="eyebrow is-plain is-muted setup-step">STEP 01 · 基本信息</p>
+
       <div class="form-group">
         <label class="form-label">昵称（可选）</label>
         <input v-model="nickname" class="form-input" placeholder="比如：小橘子" />
       </div>
 
-      <div class="flex gap-8 mb-12">
-        <button class="btn btn-sm" :class="mode==='lmp'?'btn-primary':'btn-outline'" @click="mode='lmp'">末次月经</button>
-        <button class="btn btn-sm" :class="mode==='ga'?'btn-primary':'btn-outline'" @click="mode='ga'">当前孕周</button>
-        <button class="btn btn-sm" :class="mode==='hospital'?'btn-primary':'btn-outline'" @click="mode='hospital'">医院预产期</button>
+      <label class="form-label">预产期计算方式</label>
+      <div class="segmented" role="group" aria-label="预产期计算方式">
+        <button type="button" :class="{ active: mode==='lmp' }" @click="mode='lmp'">末次月经</button>
+        <button type="button" :class="{ active: mode==='ga' }" @click="mode='ga'">当前孕周</button>
+        <button type="button" :class="{ active: mode==='hospital' }" @click="mode='hospital'">医院预产期</button>
       </div>
 
       <template v-if="mode==='lmp'">
@@ -83,10 +106,143 @@ async function submit() {
         </div>
       </template>
 
-      <p v-if="error" class="text-danger text-sm">{{ error }}</p>
-      <button class="btn btn-primary btn-block mt-12" @click="submit" :disabled="saving">
-        {{ saving ? '保存中…' : '开始记录' }}
+      <p v-if="error" class="text-danger text-sm setup-error">
+        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+          <circle cx="12" cy="12" r="9" />
+          <path d="M12 7.5v5" />
+          <path d="M12 16h.01" />
+        </svg>
+        {{ error }}
+      </p>
+
+      <button class="btn btn-primary btn-block mt-12 setup-submit" @click="submit" :disabled="saving">
+        <span>{{ saving ? '保存中…' : '开始记录' }}</span>
+        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+          <path d="M5 12h13" />
+          <path d="M13 6l6 6-6 6" />
+        </svg>
       </button>
+
+      <p class="setup-foot">
+        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+          <rect x="5" y="10.5" width="14" height="9.5" rx="2.2" />
+          <path d="M8.2 10.5V7.8a3.8 3.8 0 0 1 7.6 0v2.7" />
+        </svg>
+        所有记录只保存在这台设备上
+      </p>
     </div>
   </div>
 </template>
+
+<style scoped>
+.setup-page {
+  padding-top: clamp(30px, 6vh, 56px);
+}
+
+.setup-intro {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 30px;
+}
+.setup-intro .page-title { margin-top: 6px; }
+.setup-intro .page-sub { max-width: 400px; margin-top: 10px; text-wrap: balance; }
+
+.intro-art {
+  position: relative;
+  width: 132px;
+  height: 132px;
+  margin: 22px auto 4px;
+  display: grid;
+  place-items: center;
+}
+.art-ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 1px solid var(--accent-line);
+  background: var(--accent-soft);
+  box-shadow: var(--shadow-sm);
+}
+.art-ring--inner {
+  inset: 15px;
+  background: transparent;
+  border-style: dashed;
+  box-shadow: none;
+  opacity: 0.85;
+}
+.art-dot {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: var(--shadow-sm);
+}
+.art-dot--a { top: 8px; left: 24px; }
+.art-dot--b { bottom: 14px; right: 16px; width: 4px; height: 4px; opacity: 0.7; }
+.art-glyph {
+  position: relative;
+  z-index: 1;
+  width: 58px;
+  height: 58px;
+  color: var(--accent-deep);
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.setup-card { padding: 22px 20px 20px; }
+.setup-step { margin-bottom: 18px; }
+
+.setup-error {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin: 2px 0 0;
+}
+.setup-error svg {
+  width: 16px;
+  height: 16px;
+  flex: none;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.setup-submit { margin-top: 18px; }
+.setup-submit svg {
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.setup-foot {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 16px;
+  font-size: 0.72rem;
+  color: var(--ink-3);
+  letter-spacing: 0.02em;
+}
+.setup-foot svg {
+  width: 14px;
+  height: 14px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+</style>

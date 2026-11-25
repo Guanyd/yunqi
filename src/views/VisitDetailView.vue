@@ -143,27 +143,45 @@ const totalExp = () => expenses.value.reduce((s, e) => s + e.amount, 0)
 
 <template>
   <div class="page" v-if="visit">
-    <div class="flex items-center gap-8 mb-12">
-      <button class="btn btn-sm btn-outline" @click="router.back()">← 返回</button>
-      <h1 style="font-size:1.2rem">{{ visit.date }} <span class="text-muted text-sm">{{ gaLabel }}</span></h1>
-    </div>
+    <header class="page-head">
+      <div>
+        <p class="eyebrow">Visit Detail</p>
+        <h1 class="page-title">{{ visit.date }}</h1>
+        <p class="page-sub">{{ gaLabel }} · {{ visit.hospital || '未填医院' }}</p>
+      </div>
+      <button class="icon-btn is-lg" title="返回" aria-label="返回" @click="router.back()">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 5.5 8 12l6.5 6.5" /></svg>
+      </button>
+    </header>
 
-    <div class="card">
-      <p v-if="visit.hospital"><strong>医院：</strong>{{ visit.hospital }}</p>
-      <p v-if="visit.department"><strong>科室：</strong>{{ visit.department }}</p>
-      <p v-if="visit.doctor"><strong>医生：</strong>{{ visit.doctor }}</p>
-      <p v-if="visit.purpose"><strong>目的：</strong>{{ visit.purpose }}</p>
-      <p v-if="visit.doctorNotes" class="mt-8"><strong>医嘱：</strong>{{ visit.doctorNotes }}</p>
-      <p v-if="visit.notes" class="mt-8 text-muted">{{ visit.notes }}</p>
-      <p v-if="visit.nextAppointment" class="mt-8 text-accent">下次预约：{{ visit.nextAppointment }}</p>
-    </div>
+    <section class="card">
+      <div class="list-card-head"><small>本次就诊</small></div>
+      <div class="detail-grid">
+        <div v-if="visit.hospital" class="detail-item"><span class="detail-label">医院</span><span class="detail-value">{{ visit.hospital }}</span></div>
+        <div v-if="visit.department" class="detail-item"><span class="detail-label">科室</span><span class="detail-value">{{ visit.department }}</span></div>
+        <div v-if="visit.doctor" class="detail-item"><span class="detail-label">医生</span><span class="detail-value">{{ visit.doctor }}</span></div>
+        <div v-if="visit.purpose" class="detail-item"><span class="detail-label">就诊目的</span><span class="detail-value">{{ visit.purpose }}</span></div>
+      </div>
+      <template v-if="visit.doctorNotes || visit.notes || visit.nextAppointment">
+        <div class="divider"></div>
+        <div v-if="visit.doctorNotes" class="detail-item"><span class="detail-label">医嘱</span><span class="detail-value" style="font-weight:500">{{ visit.doctorNotes }}</span></div>
+        <p v-if="visit.notes" class="text-sm text-muted mt-8">{{ visit.notes }}</p>
+        <p v-if="visit.nextAppointment" class="mt-12"><span class="badge badge-middle">下次预约 {{ visit.nextAppointment }}</span></p>
+      </template>
+    </section>
 
     <!-- exams -->
-    <div class="flex justify-between items-center mt-16 mb-8">
-      <h2>检查单</h2>
+    <div class="section-head">
+      <h2>检查单 <span class="text-sm text-muted">{{ exams.length }} 项</span></h2>
       <button class="btn btn-sm btn-primary" @click="openNewExam">+ 添加</button>
     </div>
-    <div v-if="exams.length===0" class="text-muted text-sm mb-12">暂无检查单</div>
+    <div v-if="exams.length===0" class="empty-state">
+      <span class="empty-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24"><path d="M5 3.5h9.5L19 8v12.5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-16a1 1 0 0 1 1-1z" /><path d="M14 3.5V8h5M8 12h8M8 16h5" /></svg>
+      </span>
+      <p>还没有检查单</p>
+      <button class="btn btn-sm btn-outline mt-12" @click="openNewExam">添加第一项</button>
+    </div>
     <div v-for="ex in exams" :key="ex.id" class="card">
       <div class="flex justify-between items-center">
         <strong>{{ ex.name }}</strong>
@@ -172,43 +190,54 @@ const totalExp = () => expenses.value.reduce((s, e) => s + e.amount, 0)
       <p v-if="ex.description" class="text-sm text-muted mt-8">{{ ex.description }}</p>
       <p v-if="ex.result" class="text-sm mt-8">结果：{{ ex.result }}</p>
       <!-- photos -->
-      <div class="flex gap-8 mt-8" style="flex-wrap:wrap">
-        <div v-for="p in (photoUrls[ex.id]||[])" :key="p.id" style="position:relative;width:72px;height:72px">
-          <img :src="p.url" style="width:72px;height:72px;object-fit:cover;border-radius:8px;cursor:pointer" @click="viewerUrl=p.url" />
-          <button style="position:absolute;top:-4px;right:-4px;width:20px;height:20px;border-radius:50%;background:var(--danger);color:#fff;border:none;font-size:12px;cursor:pointer" @click="removePhoto(p.id, ex.id)">×</button>
+      <div class="flex gap-8 mt-12" style="flex-wrap:wrap">
+        <div v-for="p in (photoUrls[ex.id]||[])" :key="p.id" style="position:relative;width:72px;height:72px;flex:none">
+          <img class="photo-thumb" :src="p.url" @click="viewerUrl=p.url" />
+          <button class="photo-del" title="删除照片" aria-label="删除照片" @click="removePhoto(p.id, ex.id)">×</button>
         </div>
-        <label class="btn btn-sm btn-outline" style="width:72px;height:72px;display:flex;align-items:center;justify-content:center;cursor:pointer">
-          📷
+        <label class="photo-add" title="添加照片">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M4 7.5h3l1.5-2h7L17 7.5h3a1.5 1.5 0 0 1 1.5 1.5v9A1.5 1.5 0 0 1 20 19.5H4A1.5 1.5 0 0 1 2.5 18V9A1.5 1.5 0 0 1 4 7.5z" />
+            <circle cx="12" cy="13.5" r="3.2" /><path d="M17.5 10.5h.01" />
+          </svg>
           <input type="file" accept="image/*" multiple hidden @change="addPhotos(ex.id, $event)" />
         </label>
       </div>
       <div v-if="uploading" class="progress-bar mt-8"><div class="progress-fill" :style="{width: uploadProgress+'%'}"></div></div>
-      <div class="flex gap-8 mt-8">
+      <div class="flex gap-8 mt-12">
         <button class="btn btn-sm btn-outline" @click="openEditExam(ex)">编辑</button>
         <button class="btn btn-sm btn-outline text-danger" @click="removeExam(ex.id)">删除</button>
       </div>
     </div>
 
     <!-- expenses -->
-    <div class="flex justify-between items-center mt-16 mb-8">
-      <h2>本次花费 <span class="text-accent">¥{{ totalExp().toFixed(2) }}</span></h2>
+    <div class="section-head">
+      <h2>本次花费</h2>
       <button class="btn btn-sm btn-primary" @click="openNewExp">+ 记一笔</button>
     </div>
-    <div v-for="e in expenses" :key="e.id" class="card flex justify-between items-center">
-      <div>
-        <strong>¥{{ e.amount.toFixed(2) }}</strong>
-        <span class="text-muted text-sm" style="margin-left:8px">{{ e.category }} · {{ e.date }}</span>
-        <p v-if="e.notes" class="text-sm text-muted">{{ e.notes }}</p>
+    <p class="text-sm text-muted mb-12">合计 <span class="text-accent" style="font-weight:700">¥{{ totalExp().toFixed(2) }}</span> · {{ expenses.length }} 笔</p>
+    <div v-if="expenses.length===0" class="text-muted text-sm mb-12">本次就诊还没有关联费用</div>
+    <div v-for="e in expenses" :key="e.id" class="card expense-row">
+      <span class="expense-avatar" aria-hidden="true">
+        <svg viewBox="0 0 24 24"><path d="M5 3.5h9.5L19 8v12.5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-16a1 1 0 0 1 1-1z" /><path d="M14 3.5V8h5M8 12h8M8 16h5" /></svg>
+      </span>
+      <div class="expense-main">
+        <span class="expense-amount">¥{{ e.amount.toFixed(2) }}</span>
+        <p class="expense-meta">{{ e.category }} · {{ e.date }}</p>
+        <p v-if="e.notes" class="expense-notes">{{ e.notes }}</p>
       </div>
-      <button class="btn btn-sm btn-outline text-danger" @click="removeExp(e.id)">删除</button>
+      <button class="icon-btn" title="删除" aria-label="删除" @click="removeExp(e.id)">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 7h15M9 7V4.8A1.3 1.3 0 0 1 10.3 3.5h3.4A1.3 1.3 0 0 1 15 4.8V7M6.5 7l.8 12.2a1.6 1.6 0 0 0 1.6 1.5h6.2a1.6 1.6 0 0 0 1.6-1.5L17.5 7M10 11v6M14 11v6" /></svg>
+      </button>
     </div>
 
     <!-- exam form modal -->
     <div v-if="showExamForm" class="modal-overlay" @click.self="showExamForm=false">
       <div class="modal-sheet">
         <div class="modal-handle"></div>
-        <h2 class="mb-12">{{ editingExamId ? '编辑检查单' : '新增检查单' }}</h2>
-        <div class="form-group"><label class="form-label">项目名 *</label><input v-model="examForm.name" class="form-input" placeholder="如：NT超声" /></div>
+        <p class="eyebrow is-plain">Examination</p>
+        <h2 class="mb-16" style="font-size:1.32rem;letter-spacing:-0.03em">{{ editingExamId ? '编辑检查单' : '新增检查单' }}</h2>
+        <div class="form-group"><label class="form-label">项目名 *</label><input v-model="examForm.name" class="form-input" placeholder="如：NT 超声" /></div>
         <div class="form-group"><label class="form-label">开单说明</label><input v-model="examForm.description" class="form-input" /></div>
         <div class="form-group"><label class="form-label">状态</label>
           <select v-model="examForm.status" class="form-select">
@@ -216,7 +245,8 @@ const totalExp = () => expenses.value.reduce((s, e) => s + e.amount, 0)
           </select>
         </div>
         <div class="form-group"><label class="form-label">结果文字</label><textarea v-model="examForm.result" class="form-textarea" placeholder="原样记录，不做解读"></textarea></div>
-        <button class="btn btn-primary btn-block" @click="saveExam">保存</button>
+        <button class="btn btn-primary btn-block" @click="saveExam">保存检查单</button>
+        <button class="btn btn-outline btn-block mt-8" @click="showExamForm=false">取消</button>
       </div>
     </div>
 
@@ -224,16 +254,20 @@ const totalExp = () => expenses.value.reduce((s, e) => s + e.amount, 0)
     <div v-if="showExpForm" class="modal-overlay" @click.self="showExpForm=false">
       <div class="modal-sheet">
         <div class="modal-handle"></div>
-        <h2 class="mb-12">记一笔费用</h2>
-        <div class="form-group"><label class="form-label">金额（元）*</label><input v-model="expForm.amount" type="number" step="0.01" min="0" class="form-input" inputmode="decimal" /></div>
-        <div class="form-group"><label class="form-label">分类</label>
-          <select v-model="expForm.category" class="form-select">
-            <option>挂号</option><option>检查</option><option>药品</option><option>其他</option>
-          </select>
+        <p class="eyebrow is-plain">Expense</p>
+        <h2 class="mb-16" style="font-size:1.32rem;letter-spacing:-0.03em">记一笔费用</h2>
+        <div class="form-group"><label class="form-label">金额（元）*</label><input v-model="expForm.amount" type="number" step="0.01" min="0" class="form-input" inputmode="decimal" placeholder="0.00" /></div>
+        <div class="detail-grid">
+          <div class="form-group"><label class="form-label">分类</label>
+            <select v-model="expForm.category" class="form-select">
+              <option>挂号</option><option>检查</option><option>药品</option><option>其他</option>
+            </select>
+          </div>
+          <div class="form-group"><label class="form-label">日期</label><input v-model="expForm.date" type="date" class="form-input" /></div>
         </div>
-        <div class="form-group"><label class="form-label">日期</label><input v-model="expForm.date" type="date" class="form-input" /></div>
         <div class="form-group"><label class="form-label">备注</label><input v-model="expForm.notes" class="form-input" /></div>
-        <button class="btn btn-primary btn-block" @click="saveExp">保存</button>
+        <button class="btn btn-primary btn-block" @click="saveExp">保存费用</button>
+        <button class="btn btn-outline btn-block mt-8" @click="showExpForm=false">取消</button>
       </div>
     </div>
 

@@ -8,10 +8,10 @@ from PIL import Image, ImageDraw, ImageFont
 import math, os
 
 BG = (248, 245, 240)        # --bg
-ACCENT = (212, 133, 106)    # --accent
-ACCENT_DARK = (188, 110, 84)
-WHITE = (255, 255, 255)
-TEXT = (44, 44, 44)         # --text
+ACCENT = (200, 115, 90)      # --accent
+ACCENT_DARK = (169, 84, 61)  # --accent-deep
+WHITE = (255, 253, 251)      # --surface
+TEXT = (44, 38, 33)          # --ink
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 OUT = os.path.join(ROOT, 'public')

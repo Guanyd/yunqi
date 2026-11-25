@@ -162,100 +162,129 @@ const tabs = [
 </script>
 
 <template>
-  <div class="page">
-    <div class="flex justify-between items-center mb-8">
-      <h1>阶段备忘</h1>
-      <button class="btn btn-primary btn-sm" @click="openNew">+ 添加</button>
-    </div>
-    <p class="text-muted text-sm mb-12">仅为常见节奏参考，不替代医生安排，以你们医院医嘱为准。</p>
+  <div class="page stages-page">
+    <header class="page-head">
+      <div>
+        <p class="eyebrow">STAGE NOTES</p>
+        <h1 class="page-title">阶段备忘</h1>
+        <p class="page-sub">仅为常见节奏参考，不替代医生安排，以你们医院医嘱为准。</p>
+      </div>
+      <button class="btn btn-primary btn-sm" @click="openNew">
+        <svg class="btn-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+          <path d="M12 5v14M5 12h14" />
+        </svg>
+        添加
+      </button>
+    </header>
 
-    <div class="stage-tabs">
+    <div class="segmented stage-tabs" role="tablist">
       <button
         v-for="t in tabs" :key="t.key"
         class="stage-tab" :class="{ active: activeTab === t.key }"
+        role="tab" :aria-selected="activeTab === t.key"
         @click="activeTab = t.key"
       >
         {{ t.label }}
-        <span v-if="t.key === currentTrimester" class="stage-tab-dot">当前</span>
+        <span v-if="t.key === currentTrimester" class="seg-dot">当前</span>
       </button>
     </div>
 
-    <div v-if="progressText" class="stage-progress">
-      <span>{{ progressText }}</span>
-      <span class="text-muted">当前孕周 {{ currentWeeks }} 周</span>
+    <div v-if="progressText" class="card stage-progress">
+      <div class="stage-progress-head">
+        <span class="stage-progress-count display-num">{{ progressText }}</span>
+        <span class="text-sm text-muted">当前孕周 {{ currentWeeks }} 周</span>
+      </div>
+      <div class="progress-bar">
+        <div class="progress-fill" :style="{ width: (doneCount / Math.max(1, filtered.filter(i => !isCaution(i)).length) * 100) + '%' }"></div>
+      </div>
     </div>
 
-    <div v-if="filtered.length === 0" class="empty-state"><p>这个阶段暂无条目</p></div>
+    <div v-if="filtered.length === 0" class="empty-state">
+      <span class="empty-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" focusable="false">
+          <rect x="5" y="4" width="14" height="17" rx="2.5" />
+          <path d="M9 4V2.8h6V4" />
+          <path d="M8.5 10h7M8.5 14h4.5" />
+        </svg>
+      </span>
+      <p>这个阶段暂无条目</p>
+      <p class="text-sm text-muted">点右上角「添加」记一条属于你的备忘。</p>
+    </div>
 
     <section v-for="g in groups" :key="g.key" class="stage-group">
-      <h2 class="stage-group-title">
-        {{ g.label }}
+      <div class="section-head">
+        <h2>{{ g.label }}</h2>
         <span class="stage-group-count">
           <template v-if="g.key === 'caution'">{{ g.items.length }} 条</template>
           <template v-else>{{ g.items.filter(i => i.status === 'done').length }}/{{ g.items.length }}</template>
         </span>
-      </h2>
+      </div>
 
-      <ul class="stage-list">
-        <li
-          v-for="item in g.items" :key="item.id"
-          class="stage-item"
-          :class="[`is-${item.status}`, timingOf(item) && `timing-${timingOf(item)}`, { expanded: expandedId === item.id }]"
-        >
-          <button
-            v-if="!isCaution(item)"
-            class="stage-check" :class="`is-${item.status}`" @click.stop="toggleStatus(item)" :aria-label="item.status === 'done' ? '取消完成' : '标记已做'"
+      <div class="card stage-card">
+        <ul class="stage-list">
+          <li
+            v-for="item in g.items" :key="item.id"
+            class="stage-item"
+            :class="[`is-${item.status}`, timingOf(item) && `timing-${timingOf(item)}`, { expanded: expandedId === item.id }]"
           >
-            <svg v-if="item.status === 'done'" viewBox="0 0 16 16" width="12" height="12" aria-hidden="true">
-              <path d="M3 8.5l3.2 3.2L13 5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" />
-            </svg>
-            <svg v-else-if="item.status === 'skipped'" viewBox="0 0 16 16" width="10" height="10" aria-hidden="true">
-              <path d="M4 4l8 8M12 4l-8 8" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" />
-            </svg>
-          </button>
-          <!-- 注意事项没有「做完了」这一说，用一个小圆点占位保持左边对齐 -->
-          <span v-else class="stage-dot" aria-hidden="true"></span>
+            <button
+              v-if="!isCaution(item)"
+              class="stage-check" :class="`is-${item.status}`"
+              @click.stop="toggleStatus(item)"
+              :aria-label="item.status === 'done' ? '取消完成' : '标记已做'"
+            >
+              <svg v-if="item.status === 'done'" viewBox="0 0 16 16" width="12" height="12" aria-hidden="true">
+                <path d="M3 8.5l3.2 3.2L13 5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" />
+              </svg>
+              <svg v-else-if="item.status === 'skipped'" viewBox="0 0 16 16" width="10" height="10" aria-hidden="true">
+                <path d="M4 4l8 8M12 4l-8 8" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" />
+              </svg>
+            </button>
+            <!-- 注意事项没有「做完了」这一说，用一个小圆点占位保持左边对齐 -->
+            <span v-else class="stage-dot" aria-hidden="true"></span>
 
-          <div class="stage-body" @click="toggleExpand(item)">
-            <div class="stage-line">
-              <span class="stage-title">{{ item.title }}</span>
-              <span v-if="weekLabel(item)" class="stage-week">{{ weekLabel(item) }}</span>
+            <div class="stage-body" @click="toggleExpand(item)">
+              <div class="stage-line">
+                <span class="stage-title">{{ item.title }}</span>
+                <span v-if="weekLabel(item)" class="stage-week">{{ weekLabel(item) }}</span>
+              </div>
+              <div v-if="timingLabel(item) || item.status === 'skipped'" class="stage-meta">
+                <span v-if="timingLabel(item)" class="stage-hint" :class="`is-${timingOf(item)}`">{{ timingLabel(item) }}</span>
+                <span v-if="item.status === 'skipped'" class="stage-hint is-skipped">本院不查</span>
+              </div>
             </div>
-            <div v-if="timingLabel(item) || item.status === 'skipped'" class="stage-meta">
-              <span v-if="timingLabel(item)" class="stage-hint" :class="`is-${timingOf(item)}`">{{ timingLabel(item) }}</span>
-              <span v-if="item.status === 'skipped'" class="stage-hint is-skipped">本院不查</span>
-            </div>
-          </div>
 
-          <button class="stage-more" @click.stop="toggleExpand(item)" :aria-expanded="expandedId === item.id" aria-label="展开详情">
-            <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true" :style="{ transform: expandedId === item.id ? 'rotate(180deg)' : 'none' }">
-              <path d="M4 6.5l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
-            </svg>
-          </button>
+            <button class="stage-more" @click.stop="toggleExpand(item)" :aria-expanded="expandedId === item.id" aria-label="展开详情">
+              <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true" :style="{ transform: expandedId === item.id ? 'rotate(180deg)' : 'none' }">
+                <path d="M4 6.5l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+              </svg>
+            </button>
 
-          <div v-if="expandedId === item.id" class="stage-detail">
-            <p v-if="item.detail">{{ item.detail }}</p>
-            <div class="stage-actions">
-              <template v-if="!isCaution(item)">
-                <button class="btn btn-sm btn-outline" @click="toggleStatus(item)">
-                  {{ item.status === 'done' ? '取消完成' : '标记已做' }}
-                </button>
-                <button class="btn btn-sm btn-outline" @click="markSkipped(item)">
-                  {{ item.status === 'skipped' ? '恢复待做' : '本院不查' }}
-                </button>
-              </template>
-              <button class="btn btn-sm btn-outline" @click="openEdit(item)">编辑</button>
-              <button class="btn btn-sm btn-outline text-danger" @click="remove(item.id)">删除</button>
+            <div v-if="expandedId === item.id" class="stage-detail">
+              <p v-if="item.detail">{{ item.detail }}</p>
+              <div class="stage-actions">
+                <template v-if="!isCaution(item)">
+                  <button class="btn btn-sm btn-outline" @click="toggleStatus(item)">
+                    {{ item.status === 'done' ? '取消完成' : '标记已做' }}
+                  </button>
+                  <button class="btn btn-sm btn-outline" @click="markSkipped(item)">
+                    {{ item.status === 'skipped' ? '恢复待做' : '本院不查' }}
+                  </button>
+                </template>
+                <button class="btn btn-sm btn-outline" @click="openEdit(item)">编辑</button>
+                <button class="btn btn-sm btn-outline text-danger" @click="remove(item.id)">删除</button>
+              </div>
             </div>
-          </div>
-        </li>
-      </ul>
+          </li>
+        </ul>
+      </div>
     </section>
 
     <!-- form -->
     <div v-if="showForm" class="modal-overlay" @click.self="showForm = false">
       <div class="modal-sheet">
         <div class="modal-handle"></div>
+        <p class="eyebrow is-plain is-muted">{{ editingId ? 'EDIT NOTE' : 'NEW NOTE' }}</p>
         <h2 class="mb-12">{{ editingId ? '编辑条目' : '添加条目' }}</h2>
         <div class="form-group">
           <label class="form-label">标题 *</label>
@@ -288,211 +317,101 @@ const tabs = [
           </select>
         </div>
         <button class="btn btn-primary btn-block" @click="save">保存</button>
+        <button class="btn btn-outline btn-block mt-8" @click="showForm = false">取消</button>
       </div>
     </div>
   </div>
 </template>
 
 <style scoped>
-.stage-tabs {
-  display: flex;
-  gap: 6px;
-  margin-bottom: 12px;
-}
-.stage-tab {
-  flex: 1;
-  padding: 8px 4px;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  background: transparent;
-  color: var(--text-secondary);
-  font-size: 0.9rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.15s;
-  -webkit-tap-highlight-color: transparent;
-}
-.stage-tab.active {
-  background: var(--accent);
-  border-color: var(--accent);
-  color: #fff;
-}
-.stage-tab-dot {
-  display: block;
-  font-size: 0.65rem;
-  opacity: 0.85;
-  font-weight: 400;
-  margin-top: 1px;
+.stages-page .page-head { margin-bottom: 18px; }
+.stages-page .page-sub { max-width: 360px; text-wrap: balance; }
+.btn-ico {
+  width: 15px; height: 15px; flex: none;
+  fill: none; stroke: currentColor; stroke-width: 1.9;
+  stroke-linecap: round; stroke-linejoin: round;
 }
 
-.stage-progress {
-  display: flex;
-  justify-content: space-between;
-  font-size: 0.8rem;
-  color: var(--text-secondary);
-  padding: 0 2px 10px;
-}
+.stage-tabs { margin-bottom: 16px; }
+.stage-tabs > button { position: relative; }
 
-.stage-group {
-  margin-bottom: 20px;
-}
-.stage-group-title {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  font-size: 0.8rem;
-  font-weight: 600;
-  color: var(--text-secondary);
-  letter-spacing: 0.04em;
-  padding: 0 2px 8px;
-}
+.stage-progress { padding: 15px 17px 16px; margin-bottom: 6px; }
+.stage-progress-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
+.stage-progress-count { font-size: 1.06rem; font-weight: 650; letter-spacing: -0.01em; }
+
+.stage-group .section-head { margin: 20px 2px 10px; }
 .stage-group-count {
-  font-weight: 400;
-  font-variant-numeric: tabular-nums;
+  font-size: 0.74rem; font-weight: 650; font-variant-numeric: tabular-nums;
+  color: var(--ink-3); background: var(--surface-2);
+  padding: 4px 10px; border-radius: 999px;
 }
 
-.stage-list {
-  list-style: none;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  overflow: hidden;
-}
+.stage-card { padding: 4px 17px; }
+.stage-list { list-style: none; margin: 0; padding: 0; }
 .stage-item {
   display: grid;
-  grid-template-columns: auto 1fr auto;
+  grid-template-columns: 26px minmax(0, 1fr) 24px;
   align-items: start;
-  gap: 10px;
-  padding: 12px 14px;
-  border-bottom: 1px solid var(--border);
+  gap: 11px;
+  padding: 13px 0;
+  border-bottom: 1px solid var(--line-soft);
+  transition: opacity 0.2s;
 }
-.stage-item:last-child {
-  border-bottom: none;
-}
-.stage-item.expanded {
-  background: #fdfbf9;
-}
+.stage-item:last-child { border-bottom: 0; }
+.stage-item.timing-past { opacity: 0.72; }
 
 .stage-check {
-  width: 20px;
-  height: 20px;
-  margin-top: 2px;
-  flex: none;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50%;
-  border: 1.5px solid var(--border);
-  background: transparent;
-  color: #fff;
-  cursor: pointer;
-  transition: all 0.15s;
-  -webkit-tap-highlight-color: transparent;
+  width: 24px; height: 24px; margin-top: 1px;
+  border: 1.6px solid var(--line); border-radius: 8px;
+  background: var(--surface); color: transparent;
+  display: grid; place-items: center; cursor: pointer;
+  transition: background 0.2s, border-color 0.2s, transform 0.16s;
 }
-.stage-check.is-done {
-  background: var(--success);
-  border-color: var(--success);
-}
-.stage-check.is-skipped {
-  background: var(--text-secondary);
-  border-color: var(--text-secondary);
-}
-/* 注意事项没有完成状态，用同尺寸的淡色圆点占位，保持左侧对齐 */
+.stage-check:active { transform: scale(0.9); }
+.stage-check.is-done { background: var(--accent); border-color: var(--accent); color: #fffdfb; }
+.stage-check.is-skipped { background: var(--surface-2); border-color: transparent; color: var(--ink-3); }
+
 .stage-dot {
-  width: 20px;
-  height: 20px;
-  margin-top: 2px;
-  flex: none;
-  border-radius: 50%;
-  border: 1.5px dashed var(--border);
-  opacity: 0.7;
+  width: 8px; height: 8px; margin: 9px auto 0;
+  border-radius: 50%; background: var(--accent); opacity: 0.55;
 }
 
-.stage-body {
-  min-width: 0;
-  cursor: pointer;
-}
-.stage-line {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 8px;
-}
-.stage-title {
-  font-size: 0.95rem;
-  font-weight: 500;
-  line-height: 1.4;
-}
-.is-done .stage-title {
-  color: var(--text-secondary);
-  text-decoration: line-through;
-  text-decoration-color: rgba(0, 0, 0, 0.25);
-}
-.is-skipped .stage-title {
-  color: var(--text-secondary);
-}
+.stage-body { min-width: 0; cursor: pointer; }
+.stage-line { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+.stage-title { font-size: 0.9rem; font-weight: 600; line-height: 1.45; color: var(--ink); }
+.stage-item.is-done .stage-title { color: var(--ink-3); text-decoration: line-through; text-decoration-color: var(--line); }
+.stage-item.is-skipped .stage-title { color: var(--ink-3); }
 .stage-week {
-  flex: none;
-  font-size: 0.72rem;
-  color: var(--text-secondary);
-  font-variant-numeric: tabular-nums;
-  white-space: nowrap;
+  flex: none; font-size: 0.7rem; font-weight: 600;
+  color: var(--ink-2); background: var(--surface-2);
+  padding: 3px 8px; border-radius: 8px; white-space: nowrap;
 }
+.stage-item.timing-now .stage-week { background: var(--accent-soft); color: var(--accent-deep); }
 
-.stage-meta {
-  display: flex;
-  gap: 8px;
-  margin-top: 3px;
-}
+.stage-meta { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
 .stage-hint {
-  font-size: 0.72rem;
-  padding: 1px 6px;
-  border-radius: 4px;
+  font-size: 0.7rem; font-weight: 600;
+  padding: 2px 8px; border-radius: 7px;
+  background: var(--surface-2); color: var(--ink-3);
 }
-.stage-hint.is-now {
-  background: var(--accent-light);
-  color: #a85a3f;
-}
-.stage-hint.is-past {
-  background: #f0eeeb;
-  color: var(--text-secondary);
-}
-.stage-hint.is-skipped {
-  background: #f0eeeb;
-  color: var(--text-secondary);
-}
+.stage-hint.is-now { background: var(--accent-soft); color: var(--accent-deep); }
+.stage-hint.is-skipped { background: transparent; padding-left: 0; }
 
 .stage-more {
-  flex: none;
-  width: 28px;
-  height: 28px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: none;
-  background: transparent;
-  color: var(--text-secondary);
-  cursor: pointer;
-  border-radius: 6px;
-  -webkit-tap-highlight-color: transparent;
+  width: 24px; height: 24px; margin-top: 1px;
+  border: 0; background: transparent; color: var(--ink-3);
+  display: grid; place-items: center; cursor: pointer;
+  border-radius: 8px; transition: color 0.2s, background 0.2s;
 }
-.stage-more svg {
-  transition: transform 0.18s;
-}
+.stage-more:hover { color: var(--accent-deep); background: var(--accent-soft); }
+.stage-more svg { transition: transform 0.24s; }
 
 .stage-detail {
-  grid-column: 1 / -1;
-  padding-top: 10px;
+  grid-column: 1 / -1; margin-top: 2px;
+  background: var(--surface-2); border-radius: var(--r-md);
+  padding: 12px 13px;
 }
-.stage-detail p {
-  font-size: 0.85rem;
-  color: var(--text-secondary);
-  line-height: 1.65;
-}
-.stage-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin-top: 10px;
-}
+.stage-detail > p { font-size: 0.82rem; line-height: 1.65; color: var(--ink-2); margin-bottom: 10px; }
+.stage-actions { display: flex; flex-wrap: wrap; gap: 7px; }
+.stage-actions .btn { padding: 7px 11px; font-size: 0.78rem; }
 </style>

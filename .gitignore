@@ -27,3 +27,6 @@ dist-ssr
 .tmp-serve/
 .tmp-*
 .vite-cache/
+
+.preview/
+CON

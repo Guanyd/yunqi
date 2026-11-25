@@ -121,61 +121,162 @@ async function clearAll() {
 </script>
 
 <template>
-  <div class="page">
-    <h1 class="mb-12">我的</h1>
+  <div class="page settings-page">
+    <header class="page-head">
+      <div>
+        <p class="eyebrow">PROFILE &amp; SETTINGS</p>
+        <h1 class="page-title">我的</h1>
+        <p class="page-sub">记录、备份与隐私，都留在这台设备上</p>
+      </div>
+    </header>
 
     <!-- pregnancy info -->
-    <div class="card" v-if="pregnancy">
-      <div class="flex justify-between items-center">
-        <h3>孕期档案</h3>
-        <button class="btn btn-sm btn-outline" @click="openEditPreg">编辑</button>
+    <section v-if="pregnancy" class="card profile-card">
+      <div class="profile-head">
+        <div class="profile-avatar" aria-hidden="true">
+          <svg viewBox="0 0 24 24" focusable="false">
+            <path d="M12 20.5C7.5 17 4.5 14.1 4.5 10.8A4.3 4.3 0 0 1 12 8.3a4.3 4.3 0 0 1 7.5 2.5c0 3.3-3 6.2-7.5 9.7Z" />
+            <path d="M12 3.5v3" />
+          </svg>
+        </div>
+        <div class="flex-1">
+          <p class="eyebrow is-plain is-muted">PREGNANCY PROFILE</p>
+          <p class="profile-name">{{ pregnancy.nickname }}</p>
+          <p class="profile-caption">孕期档案</p>
+        </div>
+        <button class="icon-btn is-lg" @click="openEditPreg" aria-label="编辑孕期档案">
+          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <path d="M4 20h4l10-10-4-4L4 16v4Z" />
+            <path d="M13.5 6.5l4 4" />
+          </svg>
+        </button>
       </div>
-      <p class="mt-8"><strong>{{ pregnancy.nickname }}</strong></p>
-      <p class="text-sm text-muted">末次月经：{{ pregnancy.lmp }}</p>
-      <p class="text-sm text-muted">预产期：{{ pregnancy.dueDate }}{{ pregnancy.hospitalOverride ? '（医院校正）' : '' }}</p>
-      <p class="text-sm text-muted">来源：{{ {lmp:'末次月经推算',ga:'当前孕周推算',hospital:'医院给定'}[pregnancy.source] }}</p>
-    </div>
+
+      <div class="detail-grid">
+        <div class="detail-item">
+          <span class="detail-label">末次月经</span>
+          <span class="detail-value display-num">{{ pregnancy.lmp }}</span>
+        </div>
+        <div class="detail-item">
+          <span class="detail-label">预产期</span>
+          <span class="detail-value display-num">{{ pregnancy.dueDate }}</span>
+        </div>
+        <div class="detail-item">
+          <span class="detail-label">推算来源</span>
+          <span class="detail-value">{{ {lmp:'末次月经推算',ga:'当前孕周推算',hospital:'医院给定'}[pregnancy.source] }}</span>
+        </div>
+        <div v-if="pregnancy.hospitalOverride" class="detail-item">
+          <span class="detail-label">校正方式</span>
+          <span class="detail-value text-accent">以医院预产期为准</span>
+        </div>
+      </div>
+    </section>
+
+    <div class="section-head"><h2>数据与备份</h2><span class="text-sm text-muted">本地优先</span></div>
 
     <!-- backup -->
-    <div class="card">
-      <h3 class="mb-8">备份</h3>
-      <p class="text-sm text-muted mb-12">导出 ZIP 文件存到电脑或 U 盘，防丢用。</p>
-      <div class="flex gap-8">
-        <button class="btn btn-primary" @click="doExport" :disabled="exporting">{{ exporting ? '导出中…' : '📦 导出备份' }}</button>
-        <button class="btn btn-outline" @click="triggerImport" :disabled="importing">{{ importing ? '导入中…' : '📥 导入备份' }}</button>
+    <section class="card setting-card">
+      <div class="setting-row">
+        <div class="setting-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" focusable="false">
+            <path d="M4 8.5h16v10a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 18.5v-10Z" />
+            <path d="M3 5h18v3.5H3z" />
+            <path d="M12 5v15" />
+          </svg>
+        </div>
+        <div class="setting-body">
+          <p class="setting-title">备份记录</p>
+          <p class="setting-desc">导出 ZIP 文件存到电脑或 U 盘，换设备时可再导入恢复。</p>
+          <div class="setting-actions">
+            <button class="btn btn-primary btn-sm" @click="doExport" :disabled="exporting">
+              <svg class="btn-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <path d="M12 16V4" /><path d="M8 8l4-4 4 4" /><path d="M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3" />
+              </svg>
+              {{ exporting ? '导出中…' : '导出备份' }}
+            </button>
+            <button class="btn btn-outline btn-sm" @click="triggerImport" :disabled="importing">
+              <svg class="btn-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <path d="M12 4v12" /><path d="M8 12l4 4 4-4" /><path d="M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3" />
+              </svg>
+              {{ importing ? '导入中…' : '导入备份' }}
+            </button>
+          </div>
+        </div>
       </div>
       <input id="import-input" type="file" accept=".zip" hidden @change="doImport" />
-    </div>
+    </section>
+
+    <div class="section-head"><h2>安全与隐私</h2></div>
 
     <!-- PIN -->
-    <div class="card">
-      <h3 class="mb-8">锁屏</h3>
-      <p class="text-sm text-muted mb-8">四位数字密码，仅防随手翻阅，不防技术破解。</p>
-      <template v-if="pinEnabled">
-        <p class="text-sm" style="color:var(--success)">✅ 已开启</p>
-        <button class="btn btn-sm btn-outline mt-8" @click="disablePin">关闭锁屏</button>
-      </template>
-      <template v-else>
-        <button class="btn btn-sm btn-outline" @click="openPinSetup">开启锁屏</button>
-      </template>
-    </div>
+    <section class="card setting-card">
+      <div class="setting-row">
+        <div class="setting-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" focusable="false">
+            <rect x="4.5" y="10.4" width="15" height="9.6" rx="2.4" />
+            <path d="M8.2 10.4V7.6a3.8 3.8 0 0 1 7.6 0v2.8" />
+            <path d="M12 14.2v2.2" />
+          </svg>
+        </div>
+        <div class="setting-body">
+          <p class="setting-title">锁屏密码</p>
+          <p class="setting-desc">四位数字密码，仅防随手翻阅，不防技术破解。</p>
+          <div class="setting-actions">
+            <template v-if="pinEnabled">
+              <span class="pin-state">
+                <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                  <circle cx="12" cy="12" r="9" /><path d="M8.2 12.3l2.6 2.6 5.1-5.3" />
+                </svg>
+                已开启
+              </span>
+              <button class="btn btn-sm btn-outline" @click="disablePin">关闭锁屏</button>
+            </template>
+            <template v-else>
+              <button class="btn btn-sm btn-outline" @click="openPinSetup">开启锁屏</button>
+            </template>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="section-head"><h2 class="text-danger">危险操作</h2></div>
 
     <!-- danger zone -->
-    <div class="card" style="border-color:var(--danger)">
-      <h3 class="text-danger mb-8">危险操作</h3>
-      <button class="btn btn-danger btn-sm" @click="clearAll">清空全部数据</button>
-    </div>
+    <section class="card setting-card is-danger-card">
+      <div class="setting-row">
+        <div class="setting-icon is-danger" aria-hidden="true">
+          <svg viewBox="0 0 24 24" focusable="false">
+            <path d="M12 4.5 21 19.5H3L12 4.5Z" />
+            <path d="M12 10v4" /><path d="M12 16.8h.01" />
+          </svg>
+        </div>
+        <div class="setting-body">
+          <p class="setting-title text-danger">清空全部数据</p>
+          <p class="setting-desc">记录、照片与设置会被永久删除，请先导出备份。</p>
+          <div class="setting-actions">
+            <button class="btn btn-danger btn-sm" @click="clearAll">清空全部数据</button>
+          </div>
+        </div>
+      </div>
+    </section>
 
     <!-- PIN setup modal -->
     <div v-if="showPinSetup" class="modal-overlay" @click.self="showPinSetup=false">
       <div class="modal-sheet">
         <div class="modal-handle"></div>
+        <p class="eyebrow is-plain is-muted">SECURITY</p>
         <h2 class="mb-12">设置锁屏密码</h2>
-        <p class="text-sm text-muted mb-12">⚠️ 仅10000种组合，安全性有限。忘记密码只能清空数据后从备份恢复。</p>
-        <div class="form-group"><label class="form-label">4位数字密码</label><input v-model="newPin" type="password" inputmode="numeric" maxlength="4" class="form-input" /></div>
+        <p class="text-sm text-muted mb-12 setting-warning">
+          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <path d="M12 4.5 21 19.5H3L12 4.5Z" /><path d="M12 10v4" /><path d="M12 16.8h.01" />
+          </svg>
+          仅 10000 种组合，安全性有限。忘记密码只能清空数据后从备份恢复。
+        </p>
+        <div class="form-group"><label class="form-label">4 位数字密码</label><input v-model="newPin" type="password" inputmode="numeric" maxlength="4" class="form-input" /></div>
         <div class="form-group"><label class="form-label">确认密码</label><input v-model="confirmPin" type="password" inputmode="numeric" maxlength="4" class="form-input" /></div>
         <p v-if="pinError" class="text-danger text-sm">{{ pinError }}</p>
         <button class="btn btn-primary btn-block mt-8" @click="savePin">开启</button>
+        <button class="btn btn-outline btn-block mt-8" @click="showPinSetup=false">取消</button>
       </div>
     </div>
 
@@ -183,12 +284,49 @@ async function clearAll() {
     <div v-if="showEditPreg" class="modal-overlay" @click.self="showEditPreg=false">
       <div class="modal-sheet">
         <div class="modal-handle"></div>
+        <p class="eyebrow is-plain is-muted">PREGNANCY PROFILE</p>
         <h2 class="mb-12">编辑孕期档案</h2>
         <div class="form-group"><label class="form-label">昵称</label><input v-model="editForm.nickname" class="form-input" /></div>
         <div class="form-group"><label class="form-label">末次月经</label><input v-model="editForm.lmp" type="date" class="form-input" :max="today()" /></div>
         <div class="form-group"><label class="form-label">预产期（改这里会以医院为准）</label><input v-model="editForm.dueDate" type="date" class="form-input" /></div>
         <button class="btn btn-primary btn-block" @click="savePreg">保存</button>
+        <button class="btn btn-outline btn-block mt-8" @click="showEditPreg=false">取消</button>
       </div>
     </div>
   </div>
 </template>
+
+<style scoped>
+.settings-page .page-head { margin-bottom: 18px; }
+.settings-page .section-head { margin-top: 22px; }
+
+.profile-card { padding: 20px 18px; }
+.profile-card .detail-grid { padding-top: 14px; border-top: 1px solid var(--line-soft); }
+
+.setting-card { padding: 4px 18px 8px; }
+.is-danger-card { border-color: rgba(180, 73, 59, 0.28); }
+
+.btn-ico {
+  width: 15px; height: 15px; flex: none;
+  fill: none; stroke: currentColor; stroke-width: 1.7;
+  stroke-linecap: round; stroke-linejoin: round;
+}
+
+.pin-state {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-size: 0.8rem; font-weight: 650; color: var(--success);
+  padding: 6px 10px; border-radius: 10px; background: var(--surface-2);
+}
+.pin-state svg {
+  width: 15px; height: 15px; flex: none;
+  fill: none; stroke: currentColor; stroke-width: 1.8;
+  stroke-linecap: round; stroke-linejoin: round;
+}
+
+.setting-warning { display: flex; align-items: flex-start; gap: 7px; }
+.setting-warning svg {
+  width: 16px; height: 16px; flex: none; margin-top: 1px;
+  fill: none; stroke: currentColor; stroke-width: 1.7;
+  stroke-linecap: round; stroke-linejoin: round;
+}
+</style>

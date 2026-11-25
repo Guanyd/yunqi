@@ -13,17 +13,17 @@ defineProps({
 
 <template>
   <div class="boot-splash" :class="{ 'is-fading': fading }" aria-hidden="true">
-    <div class="boot-icon">
-      <svg viewBox="0 0 64 64" width="100%" height="100%" role="presentation">
-        <rect width="64" height="64" rx="14" fill="#d4856a" />
-        <path
-          fill="#ffffff"
-          transform="translate(32 34) scale(1.55) translate(-16 -13)"
-          d="M16 27.5 3.2 14.7a7.2 7.2 0 0 1 0-10.2 7.2 7.2 0 0 1 10.2 0L16 7.1l2.6-2.6a7.2 7.2 0 0 1 10.2 0 7.2 7.2 0 0 1 0 10.2z"
-        />
+    <div class="boot-mark">
+      <svg viewBox="0 0 48 48" role="presentation" focusable="false">
+        <circle cx="24" cy="24" r="20" />
+        <path d="M24 34 C17 29 13 25 13 20.5 C13 17 15.6 14.5 18.8 14.5 C21 14.5 22.8 15.7 24 17.5 C25.2 15.7 27 14.5 29.2 14.5 C32.4 14.5 35 17 35 20.5 C35 25 31 29 24 34 Z" />
+        <circle class="mark-dot" cx="24" cy="4" r="1.5" />
+        <circle class="mark-dot" cx="24" cy="44" r="1.5" />
       </svg>
     </div>
-    <p class="boot-title">孕期记录</p>
+    <p class="boot-title display-num">孕期记录</p>
+    <p class="boot-sub">一段温柔的旅程</p>
+    <div class="boot-rule" aria-hidden="true"><span></span><i></i><span></span></div>
   </div>
 </template>
 
@@ -37,24 +37,63 @@ defineProps({
   align-items: center;
   justify-content: center;
   gap: 18px;
-  background: var(--bg, #f8f5f0);
+  background: var(--bg);
   transition: opacity 0.28s ease;
 }
 .boot-splash.is-fading {
   opacity: 0;
   pointer-events: none;
 }
-.boot-icon {
-  width: 96px;
-  height: 96px;
-  border-radius: 22%;
-  overflow: hidden;
-  box-shadow: 0 8px 24px rgba(212, 133, 106, 0.28);
+.boot-mark {
+  width: 104px;
+  height: 104px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: var(--accent-soft);
+  border: 1px solid var(--accent-line);
+  color: var(--accent-deep);
+  box-shadow: var(--shadow-sm), inset 0 1px 0 var(--surface);
+  animation: boot-rise 0.65s cubic-bezier(0.22, 0.85, 0.32, 1) both;
 }
+.boot-mark svg {
+  width: 62px;
+  height: 62px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.boot-mark .mark-dot { fill: var(--accent); stroke: none; }
 .boot-title {
-  font-size: 1.05rem;
+  font-family: var(--font-display);
+  font-size: 1.5rem;
   font-weight: 600;
-  letter-spacing: 0.08em;
-  color: var(--text, #2c2c2c);
+  letter-spacing: 0.14em;
+  line-height: 1.3;
+  color: var(--ink);
+  animation: boot-rise 0.65s cubic-bezier(0.22, 0.85, 0.32, 1) 0.1s both;
+}
+.boot-sub {
+  font-size: 0.74rem;
+  color: var(--ink-3);
+  letter-spacing: 0.24em;
+  animation: boot-rise 0.65s cubic-bezier(0.22, 0.85, 0.32, 1) 0.18s both;
+}
+.boot-rule {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 4px;
+  opacity: 0.75;
+  animation: boot-rise 0.65s cubic-bezier(0.22, 0.85, 0.32, 1) 0.26s both;
+}
+.boot-rule span { width: 22px; height: 1px; background: var(--accent-line); }
+.boot-rule i { width: 4px; height: 4px; border-radius: 50%; background: var(--accent); }
+
+@keyframes boot-rise {
+  from { opacity: 0; transform: translateY(10px) scale(0.98); }
+  to { opacity: 1; transform: none; }
 }
 </style>

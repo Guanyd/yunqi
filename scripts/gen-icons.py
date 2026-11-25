@@ -1,13 +1,13 @@
 """生成 PWA 图标：icon-192.png / icon-512.png / apple-touch-icon.png / maskable 版本
 
-设计：暖色底（与 app --accent #d4856a 一致）+ 白色心形，居中留足安全区。
+设计：暖色底（与 app --accent #c8735a 一致）+ 白色心形，居中留足安全区。
 """
 from PIL import Image, ImageDraw
 import math, os
 
-ACCENT = (212, 133, 106)          # --accent
-ACCENT_DARK = (188, 110, 84)
-WHITE = (255, 255, 255)
+ACCENT = (200, 115, 90)           # --accent
+ACCENT_DARK = (169, 84, 61)       # --accent-deep
+WHITE = (255, 253, 251)           # --surface
 
 OUT = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'public')
 os.makedirs(OUT, exist_ok=True)
