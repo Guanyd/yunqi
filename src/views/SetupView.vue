@@ -36,8 +36,24 @@ async function submit() {
     source = 'hospital'
   }
   saving.value = true
-  await savePregnancy({ nickname: nickname.value || '宝宝', lmp, dueDate, source, hospitalOverride: source === 'hospital', createdAt: new Date().toISOString() })
-  router.replace('/')
+  try {
+    await savePregnancy({ nickname: nickname.value || '宝宝', lmp, dueDate, source, hospitalOverride: source === 'hospital', createdAt: new Date().toISOString() })
+
+    // iOS 上 <input type="date"> 会拉起系统日期选择器，键盘/选择器的附件条属于原生层。
+    // 如果它还在焦点状态就切路由，原生遮罩会残留在 webview 上，导致新页面整个点不动，
+    // 只能杀掉 App 重开才恢复。所以导航前先主动失焦。
+    if (document.activeElement && typeof document.activeElement.blur === 'function') {
+      document.activeElement.blur()
+    }
+    // 让失焦（键盘收起）先发生一帧，再换页
+    await new Promise((resolve) => setTimeout(resolve, 0))
+
+    router.replace('/')
+  } catch (e) {
+    error.value = '保存失败：' + (e && e.message ? e.message : '请重试')
+  } finally {
+    saving.value = false
+  }
 }
 </script>
 

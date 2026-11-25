@@ -39,6 +39,9 @@ defineProps({
   gap: 18px;
   background: var(--bg);
   transition: opacity 0.28s ease;
+  /* 启动层纯装饰，任何情况下都不该拦点击。
+     万一淡出定时器在 iOS 后台被节流、层没被移除，也不会让整页点不动。 */
+  pointer-events: none;
 }
 .boot-splash.is-fading {
   opacity: 0;

@@ -626,6 +626,8 @@ a { color: inherit; }
   -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
   box-shadow: 0 12px 30px -12px rgba(44, 32, 26, 0.7);
   animation: toast-in 2.5s ease forwards;
+  /* 动画结束后元素仍在原地（opacity 0），不拦点击 */
+  pointer-events: none;
 }
 
 /* ---- motion ---- */

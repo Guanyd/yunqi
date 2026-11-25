@@ -28,9 +28,19 @@ function hideSplash(startedAt) {
   const wait = Math.max(0, SPLASH_MIN_MS - (Date.now() - startedAt))
   setTimeout(() => {
     splashFading.value = true
+    // 兜底再补一个长定时器：iOS 后台节流时 300ms 的定时器可能被推迟，
+    // 但即便一直没执行，启动层也已经 pointer-events:none，不会拦点击。
     setTimeout(() => { splashVisible.value = false }, 300)
   }, wait)
 }
+
+// 路由切换时把焦点交还给 body。
+// iOS 上原生日期/键盘的附件层如果还挂在焦点上，切页后可能残留一层看不见的遮罩，
+// 表现为新页面整页点不动、必须杀掉 App 重开才恢复。
+router.afterEach(() => {
+  const el = document.activeElement
+  if (el && el !== document.body && typeof el.blur === 'function') el.blur()
+})
 
 function showToast(msg) {
   toastMsg.value = msg
