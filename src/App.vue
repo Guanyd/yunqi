@@ -1,7 +1,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { getPregnancy, getSetting } from './utils/db.js'
+import { getPregnancy, getSetting, requestPersistentStorage } from './utils/db.js'
 import TabBar from './components/TabBar.vue'
 import PinLock from './components/PinLock.vue'
 import Toast from './components/Toast.vue'
@@ -45,6 +45,10 @@ onMounted(async () => {
   // 兜底：IndexedDB 万一卡住，启动层也不能永久盖住界面。
   // 只撤掉启动层，不置 ready —— 没读到 PIN 设置前绝不渲染正文。
   setTimeout(() => hideSplash(startedAt), SPLASH_MAX_MS)
+
+  // 申请持久化存储，避免浏览器在空间紧张时把孕期数据当缓存清掉。
+  // 失败也不影响使用，只是少一层保护。
+  requestPersistentStorage()
 
   const pregnancy = await getPregnancy()
   if (!pregnancy && route.name !== 'setup') {

@@ -67,6 +67,22 @@ db.version(4).stores({
 
 // ---------- helpers ----------
 
+/**
+ * 申请持久化存储。
+ * 浏览器默认把站点数据当作「可清理的缓存」，磁盘紧张时（iOS 尤其明显）
+ * 可能整站清掉。调用 persist() 后，只有用户手动清理才会删。
+ * 首次写入数据后调用一次即可，重复调用无副作用。
+ */
+export async function requestPersistentStorage() {
+  try {
+    if (!navigator.storage || !navigator.storage.persist) return false
+    if (await navigator.storage.persisted()) return true
+    return await navigator.storage.persist()
+  } catch {
+    return false
+  }
+}
+
 export async function getPregnancy() {
   return (await db.pregnancy.toArray())[0] || null
 }
